@@ -13,6 +13,6 @@ It takes a long URL and returns a shorter, cleaner link.
 
 ## 🚀 Getting Started
 ```bash
-git clone https://github.com/<your-username>/lynk-url-shortener.git
+git clone https://github.com/haarrsshhhh03/lynk-url-shortener.git
 cd lynk-url-shortener
 mvn spring-boot:run
