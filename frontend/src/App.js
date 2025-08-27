@@ -1,27 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 
 function App() {
   const [longUrl, setLongUrl] = useState("");
-  const [shortUrl, setShortUrl] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [urls, setUrls] = useState([]);
+  const [copiedIndex, setCopiedIndex] = useState(null);
+
+  // Load previously shortened URLs from localStorage
+  useEffect(() => {
+    const storedUrls = JSON.parse(localStorage.getItem("shortenedUrls")) || [];
+    setUrls(storedUrls);
+  }, []);
 
   const handleShorten = async () => {
+    if (!longUrl) return;
+
     try {
       const response = await axios.post("/api/url/shorten", { originalUrl: longUrl });
-      setShortUrl(response.data.shortUrl);
+      const newUrl = response.data.shortUrl;
+
+      const updatedUrls = [...urls, newUrl];
+      setUrls(updatedUrls);
+      localStorage.setItem("shortenedUrls", JSON.stringify(updatedUrls));
+      setLongUrl("");
     } catch (error) {
       console.error("Error shortening URL:", error);
     }
   };
 
-  const handleCopy = () => {
-    if (shortUrl) {
-      navigator.clipboard.writeText(shortUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+  const handleCopy = (url, index) => {
+    navigator.clipboard.writeText(url);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
   };
 
   return (
@@ -39,19 +50,20 @@ function App() {
           <button onClick={handleShorten}>Shorten</button>
         </div>
 
-        {shortUrl && (
+        {urls.length > 0 && (
           <div className="result">
-            <p>Shortened URL:</p>
-            <div className="short-link">
-              <a href={shortUrl} target="_blank" rel="noreferrer">{shortUrl}</a>
-              <button
-                className={`copy-btn ${copied ? "copied" : ""}`}
-                onClick={handleCopy}
-              >
-                {copied ? "Copied!" : "Copy"}
-              </button>
-
-            </div>
+            <p>Shortened URLs:</p>
+            {urls.map((url, idx) => (
+              <div key={idx} className="short-link">
+                <a href={url} target="_blank" rel="noreferrer">{url}</a>
+                <button
+                  className={`copy-btn ${copiedIndex === idx ? "copied" : ""}`}
+                  onClick={() => handleCopy(url, idx)}
+                >
+                  {copiedIndex === idx ? "Copied!" : "Copy"}
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </div>
